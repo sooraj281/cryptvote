@@ -13,6 +13,7 @@ import CreateElectionTab from './components/CreateElectionTab';
 import VerifyVotersTab from './components/VerifyVotersTab';
 import VerifyCandidatesTab from './components/VerifyCandidatesTab';
 import ManageAdminsTab from './components/ManageAdminsTab';
+import ResultsTab from './components/ResultsTab';
 
 function App() {
   const [contract, setContract] = useState(null);
@@ -166,6 +167,8 @@ function App() {
               onTabChange={setActiveTab}
               isAdmin={isAdmin}
               adminRole={adminRole}
+              voterStatus={voterStatus}
+              elections={elections}
             />
 
             <div className="content">
@@ -204,6 +207,15 @@ function App() {
                   account={account}
                 />
               )}
+              {activeTab === 'results' && (
+                <ResultsTab
+                  contract={contract}
+                  elections={elections}
+                  showMessage={showMessage}
+                  isAdmin={isAdmin}
+                  adminRole={adminRole}
+                />
+              )}
               {/* Super Admin (4) - Full control */}
               {activeTab === 'manageAdmins' && adminRole === 4 && (
                 <ManageAdminsTab
@@ -226,6 +238,7 @@ function App() {
                 <VerifyVotersTab
                   contract={contract}
                   showMessage={showMessage}
+                  elections={elections}
                 />
               )}
 

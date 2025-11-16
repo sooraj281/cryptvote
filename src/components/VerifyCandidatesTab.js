@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 const STATUS = {
   None: 0,
@@ -22,6 +22,8 @@ function VerifyCandidatesTab({ contract, elections, showMessage }) {
   const loadPendingCandidates = async () => {
     try {
       setLoading(true);
+      console.log('Loading candidates for election:', selectedElection);
+      
       const result = await contract.getElectionCandidates(selectedElection);
       
       const candidateList = result.candidates.map((address, index) => ({
@@ -32,7 +34,14 @@ function VerifyCandidatesTab({ contract, elections, showMessage }) {
         status: Number(result.details[index].status)
       })).filter(c => c.status === STATUS.Pending);
 
+      console.log(`Found ${candidateList.length} pending candidates`);
       setPendingCandidates(candidateList);
+      
+      if (candidateList.length === 0) {
+        showMessage('info', 'No pending candidates for this election');
+      } else {
+        showMessage('success', `Found ${candidateList.length} pending candidate(s)`);
+      }
     } catch (error) {
       console.error('Error loading pending candidates:', error);
       showMessage('error', 'Failed to load pending candidates');
@@ -89,10 +98,10 @@ function VerifyCandidatesTab({ contract, elections, showMessage }) {
         </select>
       </div>
 
-      {loading && <div className="loading">Loading pending candidates...</div>}
-
-      {!loading && selectedElection && pendingCandidates.length === 0 && (
-        <div className="loading">No pending candidates for this election</div>
+      {loading && (
+        <div className="loading">
+          <p>Loading pending candidates...</p>
+        </div>
       )}
 
       {!loading && pendingCandidates.length > 0 && (
