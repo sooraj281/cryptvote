@@ -1,0 +1,34 @@
+{
+  "voters": [
+    {
+      "aadhaarId": "123456789012",
+      "name": "John Doe",
+      "mobile": "+91 8606438971",
+      "email": "soorajsoorajk136@gmail.com.com"
+    },
+    {
+      "aadhaarId": "234567890123",
+      "name": "Jane Smith",
+      "mobile": "+1234567891",
+      "email": "jane@example.com"
+    },
+    {
+      "aadhaarId": "234567890124",
+      "name": "sooraj",
+      "mobile": "+91 8606438971",
+      "email": "soorajsoorajk136@gmail.com"
+    },
+    {
+      "aadhaarId": "345678901234",
+      "name": "Bob Johnson",
+      "mobile": "+1234567892",
+      "email": "bob@example.com"
+    },
+    {
+      "aadhaarId": "686167570809",
+      "name": "Abhinesh K Ramesh",
+      "mobile": "+9074583691",
+      "email": "akr007@example.com"
+    }
+  ]
+}

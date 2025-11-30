@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import OTPVerification from './OTPVerification';
 
 const STATUS = {
   None: 0,
@@ -15,8 +16,26 @@ function RegisterTab({ contract, elections, voterStatus, showMessage, getStatusT
     electionId: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [votersDatabase, setVotersDatabase] = useState([]);
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [verifiedVoterData, setVerifiedVoterData] = useState(null);
+  const [checking, setChecking] = useState(false);
 
-  const handleSubmit = async (e) => {
+  // Load voters database
+  useEffect(() => {
+    fetch('/voters-database.json')
+      .then(res => res.json())
+      .then(data => {
+        setVotersDatabase(data.voters);
+        console.log('Loaded voters database:', data.voters.length, 'voters');
+      })
+      .catch(error => {
+        console.error('Error loading voters database:', error);
+        showMessage('error', 'Failed to load voters database');
+      });
+  }, []);
+
+  const handleAadhaarCheck = async (e) => {
     e.preventDefault();
     if (!contract) return;
 
@@ -30,10 +49,37 @@ function RegisterTab({ contract, elections, voterStatus, showMessage, getStatusT
       }
     }
 
+    setChecking(true);
+
+    // Check if Aadhaar exists in database
+    const voterData = votersDatabase.find(v => v.aadhaarId === formData.aadhaarId);
+    
+    if (!voterData) {
+      showMessage('error', 'Aadhaar ID not valid. Please contact election authority.');
+      setChecking(false);
+      return;
+    }
+
+    // Auto-fill name if it matches
+    if (formData.name && formData.name.toLowerCase() !== voterData.name.toLowerCase()) {
+      showMessage('error', `Name mismatch!Enter the correct Name !`);
+      setChecking(false);
+      return;
+    }
+
+    // Set verified voter data and show OTP modal
+    setVerifiedVoterData(voterData);
+    setShowOTPModal(true);
+    setChecking(false);
+  };
+
+  const handleOTPVerified = async () => {
+    setShowOTPModal(false);
+    
     try {
       setSubmitting(true);
       const tx = await contract.registerVoter(
-        formData.name,
+        verifiedVoterData.name,
         formData.aadhaarId,
         formData.electionId
       );
@@ -43,6 +89,7 @@ function RegisterTab({ contract, elections, voterStatus, showMessage, getStatusT
       showMessage('success', 'Registration successful! Awaiting verification.');
       
       setFormData({ name: '', aadhaarId: '', electionId: '' });
+      setVerifiedVoterData(null);
       loadVoterStatus(contract, account);
     } catch (error) {
       console.error('Error registering:', error);
@@ -50,6 +97,11 @@ function RegisterTab({ contract, elections, voterStatus, showMessage, getStatusT
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleOTPCancel = () => {
+    setShowOTPModal(false);
+    setVerifiedVoterData(null);
   };
 
   // Filter elections to show only active or upcoming ones
@@ -74,23 +126,32 @@ function RegisterTab({ contract, elections, voterStatus, showMessage, getStatusT
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <div className="info-box" style={{marginBottom: '20px', padding: '15px', background: '#e3f2fd', borderRadius: '8px'}}>
+        <p style={{margin: 0, color: '#1565c0', fontSize: '14px'}}>
+          ℹ️ Your Aadhaar must be registered in the election database. OTP verification will be required.
+        </p>
+      </div>
+
+      <form onSubmit={handleAadhaarCheck}>
+        <div className="form-group">
+          <label>Aadhaar ID</label>
+          <input
+            type="text"
+            value={formData.aadhaarId}
+            onChange={(e) => setFormData({...formData, aadhaarId: e.target.value.replace(/\D/g, '').slice(0, 12)})}
+            placeholder="Enter 12-digit Aadhaar number"
+            maxLength="12"
+            required
+          />
+          
+        </div>
         <div className="form-group">
           <label>Full Name</label>
           <input
             type="text"
             value={formData.name}
             onChange={(e) => setFormData({...formData, name: e.target.value})}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Aadhaar ID (Hashed)</label>
-          <input
-            type="text"
-            value={formData.aadhaarId}
-            onChange={(e) => setFormData({...formData, aadhaarId: e.target.value})}
-            placeholder="Enter hashed Aadhaar ID"
+            placeholder="Enter your full name"
             required
           />
         </div>
@@ -117,10 +178,18 @@ function RegisterTab({ contract, elections, voterStatus, showMessage, getStatusT
             )}
           </select>
         </div>
-        <button type="submit" className="submit-btn" disabled={submitting}>
-          {submitting ? 'Submitting...' : 'Register'}
+        <button type="submit" className="submit-btn" disabled={submitting || checking}>
+          {checking ? 'Verifying Aadhaar...' : submitting ? 'Submitting...' : 'Verify & Register'}
         </button>
       </form>
+
+      {showOTPModal && verifiedVoterData && (
+        <OTPVerification
+          voterData={verifiedVoterData}
+          onVerified={handleOTPVerified}
+          onCancel={handleOTPCancel}
+        />
+      )}
     </div>
   );
 }

@@ -104,33 +104,38 @@ function VerifyCandidatesTab({ contract, elections, showMessage }) {
         </div>
       )}
 
-      {!loading && pendingCandidates.length > 0 && (
-        <div className="verification-list">
-          {pendingCandidates.map(candidate => (
-            <div key={candidate.address} className="verification-card">
-              <div className="verification-info">
-                <h4>{candidate.name}</h4>
-                <p><strong>Address:</strong> {candidate.address}</p>
-                <p><strong>Party:</strong> {candidate.party}</p>
-                <p><strong>Bio (IPFS):</strong> {candidate.bio}</p>
+      {!loading && selectedElection && pendingCandidates.length > 0 && (
+        <>
+          <h3 style={{marginTop: '20px', marginBottom: '15px'}}>
+            Pending Candidates ({pendingCandidates.length})
+          </h3>
+          <div className="verification-list">
+            {pendingCandidates.map(candidate => (
+              <div key={candidate.address} className="verification-card">
+                <div className="verification-info">
+                  <h4>{candidate.name}</h4>
+                  <p><strong>Address:</strong> {candidate.address}</p>
+                  <p><strong>Party:</strong> {candidate.party}</p>
+                  <p><strong>Bio (IPFS):</strong> {candidate.bio}</p>
+                </div>
+                <div className="verification-actions">
+                  <button 
+                    className="verify-btn"
+                    onClick={() => handleVerify(candidate.address)}
+                  >
+                    Verify
+                  </button>
+                  <button 
+                    className="reject-btn"
+                    onClick={() => handleReject(candidate.address)}
+                  >
+                    Reject
+                  </button>
+                </div>
               </div>
-              <div className="verification-actions">
-                <button 
-                  className="verify-btn"
-                  onClick={() => handleVerify(candidate.address)}
-                >
-                  Verify
-                </button>
-                <button 
-                  className="reject-btn"
-                  onClick={() => handleReject(candidate.address)}
-                >
-                  Reject
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
